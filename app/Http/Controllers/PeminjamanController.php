@@ -48,20 +48,23 @@ public function store(Request $request)
         'barang_id' => 'required|array',
         'barang_id.*' => 'exists:barangs,id',
         'jumlah' => 'required|array',
-        'waktu_peminjaman' => 'required|date',
+        // diabaikan: 'waktu_peminjaman' => 'required|date',
         'keterangan' => 'nullable|string',
     ]);
 
     $namaPeminjam = $request->nama_peminjam;
-    $waktuPeminjaman = $request->waktu_peminjaman;
     $keterangan = $request->keterangan;
+
+    // Gunakan waktu WITA (Asia/Makassar)
+    $waktuPeminjaman = now('Asia/Makassar');
 
     foreach ($request->barang_id as $barangId) {
         $barang = Barang::find($barangId);
         $jumlahDipinjam = $request->jumlah[$barangId] ?? 1;
 
         if ($barang->jumlah_barang < $jumlahDipinjam) {
-            return back()->withErrors("Jumlah peminjaman $barang->nama_barang melebihi stok tersedia ($barang->jumlah_barang).")->withInput();
+            return back()->withErrors("Jumlah peminjaman $barang->nama_barang melebihi stok tersedia ($barang->jumlah_barang).")
+                         ->withInput();
         }
 
         Peminjaman::create([
@@ -72,12 +75,13 @@ public function store(Request $request)
             'waktu_pengembalian' => null,
             'lama_peminjaman' => null,
             'keterangan' => $keterangan,
-            'status' => 'Menunggu', // default menunggu ACC
+            'status' => 'Menunggu',
             'admin_id' => auth()->user()->role == 'admin' ? auth()->id() : null,
         ]);
     }
 
-    return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil disimpan dan menunggu approval.');
+    return redirect()->route('peminjaman.index')
+                     ->with('success', 'Peminjaman berhasil disimpan dan menunggu approval.');
 }
 
 // Approve peminjaman
@@ -164,8 +168,10 @@ public function approvePengembalian($id)
 
     if ($peminjaman->status_pengembalian === 'Menunggu') {
 
-        $waktuSekarang = now('Asia/Jakarta');
-        $waktuPinjam = \Carbon\Carbon::parse($peminjaman->waktu_peminjaman, 'Asia/Jakarta');
+        // Gunakan timezone WITA
+        $waktuSekarang = now('Asia/Makassar');
+        $waktuPinjam = \Carbon\Carbon::parse($peminjaman->waktu_peminjaman)
+                        ->setTimezone('Asia/Makassar');
 
         $diff = $waktuPinjam->diff($waktuSekarang);
 
@@ -199,6 +205,7 @@ public function approvePengembalian($id)
 
     return back()->with('error', 'Status pengembalian tidak valid.');
 }
+
 
 public function laporan(Request $request)
 {
