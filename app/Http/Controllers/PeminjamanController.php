@@ -164,31 +164,26 @@ public function approvePengembalian($id)
 
     if ($peminjaman->status_pengembalian === 'Menunggu') {
 
-        $waktuSekarang = now();
+        $waktuSekarang = now('Asia/Jakarta');
+        $waktuPinjam = \Carbon\Carbon::parse($peminjaman->waktu_peminjaman, 'Asia/Jakarta');
 
-        // Hitung total jam
-        $totalJam = \Carbon\Carbon::parse($peminjaman->waktu_peminjaman)
-                    ->diffInHours($waktuSekarang);
+        $diff = $waktuPinjam->diff($waktuSekarang);
 
-        // Konversi menjadi hari dan jam
-        $hari = intdiv($totalJam, 24);
-        $jam = $totalJam % 24;
+        // Buat text lama peminjaman
+        $parts = [];
+        if ($diff->d > 0) $parts[] = "{$diff->d} hari";
+        if ($diff->h > 0) $parts[] = "{$diff->h} jam";
+        if ($diff->i > 0) $parts[] = "{$diff->i} menit";
 
-        // Format hasil lama peminjaman untuk disimpan sebagai VARCHAR
-        if ($hari > 0 && $jam > 0) {
-            $lamaPeminjaman = "{$hari} hari {$jam} jam";
-        } elseif ($hari > 0) {
-            $lamaPeminjaman = "{$hari} hari";
-        } else {
-            $lamaPeminjaman = "{$jam} jam";
-        }
+        $lamaPeminjaman = implode(' ', $parts);
+        if ($lamaPeminjaman === '') $lamaPeminjaman = '0 menit';
 
-        // Update data peminjaman
+        // Update data
         $peminjaman->update([
             'status_pengembalian' => 'Dikembalikan',
             'status' => 'Dikembalikan',
             'waktu_pengembalian' => $waktuSekarang,
-            'lama_peminjaman' => $lamaPeminjaman, // varchar aman
+            'lama_peminjaman' => $lamaPeminjaman,
             'admin_id' => auth()->id(),
         ]);
 
@@ -204,7 +199,6 @@ public function approvePengembalian($id)
 
     return back()->with('error', 'Status pengembalian tidak valid.');
 }
-
 
 public function laporan(Request $request)
 {
