@@ -171,8 +171,8 @@
                 <button class="btn btn-primary w-100 mt-3" type="submit">Login</button>
             </form>
 
-            <p class="text-center mt-3">Belum punya akun? <a href="#" class="fw-bold"
-                    style="color:#0036A6;">Daftar</a></p>
+            {{-- <p class="text-center mt-3">Belum punya akun? <a href="#" class="fw-bold"
+                    style="color:#0036A6;">Daftar</a></p> --}}
         </div>
 
     </div>
