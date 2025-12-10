@@ -11,10 +11,14 @@
 
     <div class="sidebar-divider"></div>
 
-    <a href="{{ route('barang.create') }}" class="{{ request()->is('barang/create') ? 'active' : '' }}">
-        <i class="fa fa-plus"></i>
-        <span>Tambah Barang</span>
-    </a>
+    @auth
+        @if (Auth::user()->role === 'admin')
+            <a href="{{ route('barang.create') }}" class="{{ request()->is('barang/create') ? 'active' : '' }}">
+                <i class="fa fa-plus"></i>
+                <span>Tambah Barang</span>
+            </a>
+        @endif
+    @endauth
 
     {{-- <a href="{{ route('barang.index') }}" class="{{ request()->is('barang') ? 'active' : '' }}">
         <i class="fa fa-boxes"></i>
